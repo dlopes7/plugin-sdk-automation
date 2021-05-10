@@ -1,61 +1,44 @@
 import logging
-import docker
-import time
 
-from pathlib import Path
+import click
+from plugin_sdk_automation.handlers import DockerHandler
+from rich.logging import RichHandler
+from rich.traceback import install
+
+install()
 
 
-def make_posix_kitematic(directory: Path) -> str:
-    # Convert path to windows/kitematic format
-    # C:\Users\user > /c/Users/user
-    directory = f"{directory.as_posix()}"
-    if ":" in directory:
-        drive, rest = directory.split(":", maxsplit=1)
-        directory = f"{drive.lower()}{rest}"
-        if not directory.startswith("/"):
-            directory = f"/{directory}"
-    return directory
+log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
+st = RichHandler()
+fmt = logging.Formatter("%(filename)s:%(lineno)d - %(message)s")
+st.setFormatter(fmt)
+log.addHandler(st)
+
+
+@click.group(invoke_without_command=True)
+@click.option("--debug", default=False, is_flag=True)
+@click.pass_context
+def cli(ctx, debug):
+    log.info(f"Debug is: {debug}")
+    if debug:
+        log.setLevel(logging.DEBUG)
+    if ctx.invoked_subcommand is None:
+        log.info("No subcommand provided, executing build")
+        ctx.invoke(build)
+
+
+@cli.command()
+@click.option("--directory", "-d")
+def build(directory: str):
+    d = DockerHandler(log=log, directory=directory)
+    d.build()
 
 
 def main():
-    log = logging.getLogger(__name__)
-    log.setLevel(logging.DEBUG)
-    st = logging.StreamHandler()
-    fmt = logging.Formatter("%(asctime)s - %(levelname)s - %(name)s - %(filename)s:%(lineno)d - %(message)s")
-    st.setFormatter(fmt)
-    log.addHandler(st)
 
-    client = docker.from_env()
-
-    log.info(f"Pulling the image")
-    for log_line in client.api.pull("dlopes7/plugin_sdk", stream=True):
-        log.info(log_line.decode().rstrip())
-
-    # Check if we are where plugin.json is located
-    if not Path("plugin.json") in list(Path().iterdir()):
-        raise Exception("The command must be run from where plugin.json is located")
-
-    current_dir = Path().absolute()
-    build_dir = make_posix_kitematic(current_dir)
-    parent_dir = make_posix_kitematic(current_dir.parents[0])
-
-    volumes = {
-        build_dir: {'bind': '/data/src', 'mode': 'rw'},
-        parent_dir: {'bind': '/data', 'mode': 'rw'}
-    }
-    log.info(f"Will mount volumes: {volumes}")
-    log.info(f"Starting docker container")
-
-    start_time = time.time()
-
-    # Remove fixme messages from output
-    env = {"WINEDEBUG": "-all"}
-    container = client.containers.run("dlopes7/plugin_sdk", volumes=volumes, remove=True, detach=True, environment=env)
-    for log_line in container.logs(stdout=True, stderr=True, stream=True, follow=True):
-        log.info(log_line.decode().rstrip())
-
-    log.info(f"Docker container build finished after {time.time() - start_time:.2f}s")
+    cli()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
