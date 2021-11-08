@@ -7,9 +7,13 @@ import docker
 
 
 class DockerHandler:
-    def __init__(self, log: logging.Logger, directory=None):
+    def __init__(self, log: logging.Logger, directory=None, python_version=None):
         self.log = log
         self.directory = directory
+        
+        if python_version is None:
+            python_version = "py38"
+        self.python_version = python_version
 
     def build(self):
         client = docker.from_env()
@@ -19,8 +23,9 @@ class DockerHandler:
         if not Path("plugin.json") in list(Path().iterdir()):
             raise Exception("psa must be run from where plugin.json is located")
 
-        self.log.info(f"Pulling the image")
-        for log_line in client.api.pull("dlopes7/plugin_sdk", stream=True):
+        image_name = f"dlopes7/plugin_sdk:{self.python_version}"
+        self.log.info(f"Pulling the image '{image_name}'")
+        for log_line in client.api.pull(image_name, stream=True):
             self.log.info(log_line.decode().rstrip())
 
         current_dir = Path().absolute()

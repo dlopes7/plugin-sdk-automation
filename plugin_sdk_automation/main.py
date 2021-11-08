@@ -30,13 +30,13 @@ def cli(ctx, debug):
 
 @cli.command()
 @click.option("--directory", "-d")
-def build(directory: str):
-    d = DockerHandler(log=log, directory=directory)
+@click.option("--python-version", "-p", type=click.Choice(["py36", "py38"]))
+def build(directory: str, python_version: str):
+    d = DockerHandler(log=log, directory=directory, python_version=python_version)
     d.build()
 
 
 def main():
-
     cli()
 
 
