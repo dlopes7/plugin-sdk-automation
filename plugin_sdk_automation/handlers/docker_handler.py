@@ -42,8 +42,8 @@ class DockerHandler:
 
         start_time = time.time()
 
-        env = {"WINEDEBUG": "-all"}
-        container = client.containers.run("dlopes7/plugin_sdk", volumes=volumes, remove=True, detach=True, environment=env)
+        env = {"WINEDEBUG": "-all", "PYTHON_SHORT_VERSION": self.python_version.replace("py", "")}
+        container = client.containers.run(f"dlopes7/plugin_sdk:{self.python_version}", volumes=volumes, remove=True, detach=True, environment=env)
         for log_line in container.logs(stdout=True, stderr=True, stream=True, follow=True):
             self.log.info(log_line.decode().rstrip())
 
