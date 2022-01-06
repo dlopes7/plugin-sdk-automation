@@ -64,6 +64,12 @@ class PropsHandler:
         self.log.info(f"Created {Path().absolute()}/properties.json")
 
     def generate_simulator_snapshot(self):
+        with open("plugin.json", "r") as f:
+            plugin_json = json.load(f)
+            activation = plugin_json.get("source", {}).get("activation", "")
+            if activation == "Remote":
+                return
+
         if Path("simulator_snapshot.json") in list(Path().iterdir()):
             overwrite = input("There is a simulator_snapshot.json file present already, overwrite? ")
             if overwrite not in ["y", "Y", "yes", "Yes"]:

@@ -5,7 +5,7 @@ from rich.logging import RichHandler
 from rich.traceback import install
 
 from .handlers import DockerHandler
-from .handlers.props_handler import PropsHandler
+from .handlers import PropsHandler
 
 
 install()
@@ -37,6 +37,15 @@ def cli(ctx, debug):
 def build(directory: str, python_version: str):
     d = DockerHandler(log=log, directory=directory, python_version=python_version)
     d.build()
+
+
+@cli.command()
+@click.option("--directory", "-d")
+@click.option("--python-version", "-p", type=click.Choice(["py36", "py38"]))
+@click.option("--os", "-o", type=click.Choice(["linux", "windows"]), default="linux")
+def sim(directory: str, python_version: str, os: str):
+    d = DockerHandler(log=log, directory=directory, python_version=python_version, simulator_os=os)
+    d.sim()
 
 
 @cli.command()
