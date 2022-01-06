@@ -10,7 +10,7 @@ class DockerHandler:
     def __init__(self, log: logging.Logger, directory=None, python_version=None):
         self.log = log
         self.directory = directory
-        
+
         if python_version is None:
             python_version = "py38"
         self.python_version = python_version
@@ -19,7 +19,6 @@ class DockerHandler:
         client = docker.from_env()
 
         # Check if we are where plugin.json is located
-
         if not Path("plugin.json") in list(Path().iterdir()):
             raise Exception("psa must be run from where plugin.json is located")
 

@@ -1,9 +1,12 @@
 import logging
 
 import click
-from plugin_sdk_automation.handlers import DockerHandler
 from rich.logging import RichHandler
 from rich.traceback import install
+
+from .handlers import DockerHandler
+from .handlers.props_handler import PropsHandler
+
 
 install()
 
@@ -34,6 +37,12 @@ def cli(ctx, debug):
 def build(directory: str, python_version: str):
     d = DockerHandler(log=log, directory=directory, python_version=python_version)
     d.build()
+
+
+@cli.command()
+def gen_props():
+    p = PropsHandler(log=log)
+    p.run()
 
 
 def main():
